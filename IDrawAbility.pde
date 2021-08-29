@@ -215,6 +215,8 @@ class PointItem extends RectItem
   }
 }
 
+///////////////////////////////////////////////
+
 void setup()
 {
   size(1600, 1200);
