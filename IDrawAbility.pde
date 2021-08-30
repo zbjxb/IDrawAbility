@@ -215,16 +215,172 @@ class PointItem extends RectItem
   }
 }
 
+////////////////////////////////////// model //////////////////////////////////
+
+public interface INodeContent
+{
+}
+
+public interface INodePainter
+{
+  public void setContent(INodeContent content);
+  public INodeContent getContent();
+  public void paint();
+}
+
+public interface INode
+{
+  public String name();
+  public void setContent(INodeContent content);
+  public void setPainter(INodePainter painter);
+  public INodePainter getPainter();
+  public void draw();
+}
+
+//// model impl ////
+public class BaseNode implements INode
+{
+  public BaseNode(String name)
+  {
+    _name = name;
+  }
+  
+  //~ Begin INode
+  public String name()
+  {
+    return _name;
+  }
+  
+  public void setContent(INodeContent content)
+  {
+    _content = content;
+  }
+  
+  public void setPainter(INodePainter painter)
+  {
+    _painter = painter;
+  }
+  
+  public INodePainter getPainter()
+  {
+    return _painter;
+  }
+  
+  public void draw()
+  {
+    if (_painter != null)
+    {
+      _painter.paint();
+    }
+  }
+  //~ End INode
+  
+  private String _name;
+  private INodeContent _content;
+  private INodePainter _painter;
+}
+
+public class NodeList extends ArrayList<INode>
+{
+}
+
+public class BasePainter implements INodePainter
+{
+  public void setContent(INodeContent content)
+  {
+    _content = content;
+  }
+  
+  public INodeContent getContent()
+  {
+    return _content;
+  }
+  
+  public void paint()
+  {
+  }
+  
+  private INodeContent _content;
+}
+
+////// a class content begin ///////
+public class ClassContent implements INodeContent
+{
+  public ClassContent(String name, String[] properties, String[] functions)
+  {
+    _className = name;
+    _properties = new String[properties.length];
+    _functions = new String[functions.length];
+    
+    arrayCopy(properties, _properties);
+    arrayCopy(functions, _functions);
+  }
+  
+  public String _className;
+  public String[] _properties;
+  public String[] _functions;
+}
+
+public class ClassPainter_01 extends BasePainter
+{
+  public void paint()
+  {
+    ClassContent content = (ClassContent)getContent();
+    if (content != null)
+    {
+      RectItem nameRegion = new RectItem(0,0,50,30);
+      nameRegion.setRandomStyle();
+      nameRegion.draw();
+      
+      if (content._properties != null)
+      {
+        RectItem propertyRegion = new RectItem(0,30, 50,30);
+        propertyRegion.setRandomStyle();
+        propertyRegion.draw();
+      }
+      
+      if (content._functions != null)
+      {
+        RectItem functionRegion = new RectItem(0,60, 50,30);
+        functionRegion.setRandomStyle();
+        functionRegion.draw();
+      }
+    }
+  }
+}
+////// a class content end ///////
+
 ///////////////////////////////////////////////
+
+NodeList globalNodes;
 
 void setup()
 {
   size(1600, 1200);
+  surface.setResizable(true);
   randomSeed(0);
+  
+  globalNodes = new NodeList();
+  
+  String[] properties = {"length: int"};
+  String[] functions = {"void reset()"};
+  INodeContent c1 = new ClassContent("FArray",properties,functions);
+  INodePainter p1 = new ClassPainter_01();
+  p1.setContent(c1);
+  
+  INode n1 = new BaseNode("Node_1");
+  n1.setContent(c1);
+  n1.setPainter(p1);
+  globalNodes.add(n1);
 }
 
 void draw() 
 {
+  for(INode n : globalNodes)
+  {
+    n.draw();
+  }
+  
   if (mousePressed)
   {
     //fill(0);
