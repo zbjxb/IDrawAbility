@@ -57,10 +57,10 @@ public class ItemStyleBase implements IItemStyle
     return _strokeColor;
   }
   
-  private boolean _fillEnabled;
-  private color _fillColor;
-  private boolean _strokeEnabled;
-  private color _strokeColor;
+  private boolean _fillEnabled = false;
+  private color _fillColor = color(255,255,255);
+  private boolean _strokeEnabled = true;
+  private color _strokeColor = color(0,0,0);
 }
 
 public interface IGuiItem
@@ -226,6 +226,11 @@ public interface INodePainter
   public void setContent(INodeContent content);
   public INodeContent getContent();
   public void paint();
+  
+  public PVector getOrigin();
+  public PVector getSize();
+  public void setOrigin(float x, float y);
+  public void setSize(float w, float h);
 }
 
 public interface INode
@@ -286,6 +291,12 @@ public class NodeList extends ArrayList<INode>
 
 public class BasePainter implements INodePainter
 {
+  public BasePainter(float x, float y, float w, float h)
+  {
+    _origin = new PVector(x, y);
+    _size = new PVector(w, h);
+  }
+  
   public void setContent(INodeContent content)
   {
     _content = content;
@@ -300,7 +311,28 @@ public class BasePainter implements INodePainter
   {
   }
   
+  public PVector getOrigin()
+  {
+    return _origin;
+  }
+  public PVector getSize()
+  {
+    return _size;
+  }
+  public void setOrigin(float x, float y)
+  {
+    _origin.x = x;
+    _origin.y = y;
+  }
+  public void setSize(float w, float h)
+  {
+    _size.x = w;
+    _size.y = h;
+  }
+  
   private INodeContent _content;
+  private PVector _origin;
+  private PVector _size;
 }
 
 ////// a class content begin ///////
@@ -323,28 +355,101 @@ public class ClassContent implements INodeContent
 
 public class ClassPainter_01 extends BasePainter
 {
+  public ClassPainter_01(float x, float y, float w, float h)
+  {
+    super(x, y, w, h);
+  }
+  
+  public PVector getSize()
+  {
+    ClassContent content = (ClassContent)getContent();
+    if (content != null)
+    {
+      float max_width = 1;
+      
+      float cw = textWidth(content._className);
+      max_width = max(cw, max_width);
+      
+      for(String p : content._properties)
+      {
+        cw = textWidth(p);
+        max_width = max(cw, max_width);
+      }
+      
+      for(String f : content._functions)
+      {
+        cw = textWidth(f);
+        max_width = max(cw, max_width);
+      }
+      
+      setSize(max_width+20, 20);
+      return super.getSize();
+    }
+    else
+    {
+      return super.getSize();
+    }
+  }
+  
   public void paint()
   {
     ClassContent content = (ClassContent)getContent();
     if (content != null)
     {
-      RectItem nameRegion = new RectItem(0,0,50,30);
-      nameRegion.setRandomStyle();
+      pushMatrix();
+      PVector origin = getOrigin();
+      translate(origin.x, origin.y);
+      
+      PVector size = getSize();
+      float w = size.x;
+      float line_height = 30;
+      float n_y = 0;
+      float p_y = line_height;
+      float f_y = p_y + 30*content._properties.length;
+      float h = n_y + 20;
+      IItemStyle textStyle = new ItemStyleBase();
+      
+      RectItem nameRegion = new RectItem(0,n_y, w,line_height);
+      //nameRegion.setRandomStyle();
+      nameRegion.setStyle(textStyle);
       nameRegion.draw();
+      
+      fill(0,0,0);
+      text(content._className, 10, h);
       
       if (content._properties != null)
       {
-        RectItem propertyRegion = new RectItem(0,30, 50,30);
-        propertyRegion.setRandomStyle();
+        RectItem propertyRegion = new RectItem(0,p_y, w,f_y-p_y);
+        //propertyRegion.setRandomStyle();
+        propertyRegion.setStyle(textStyle);
         propertyRegion.draw();
+        
+        fill(0,0,0);
+        h = p_y+20;
+        for(String p : content._properties)
+        {
+          text(p, 10, h);
+          h+=20;
+        }
       }
       
       if (content._functions != null)
       {
-        RectItem functionRegion = new RectItem(0,60, 50,30);
-        functionRegion.setRandomStyle();
+        RectItem functionRegion = new RectItem(0,f_y, w,line_height*content._functions.length);
+        //functionRegion.setRandomStyle();
+        functionRegion.setStyle(textStyle);
         functionRegion.draw();
+        
+        fill(0,0,0);
+        h = f_y+20;
+        for(String f : content._functions)
+        {
+          text(f, 10, h);
+          h+=20;
+        }
       }
+      
+      popMatrix();
     }
   }
 }
@@ -362,10 +467,10 @@ void setup()
   
   globalNodes = new NodeList();
   
-  String[] properties = {"length: int"};
+  String[] properties = {"length: int", "size: int"};
   String[] functions = {"void reset()"};
   INodeContent c1 = new ClassContent("FArray",properties,functions);
-  INodePainter p1 = new ClassPainter_01();
+  INodePainter p1 = new ClassPainter_01(512,512,800,600);
   p1.setContent(c1);
   
   INode n1 = new BaseNode("Node_1");
