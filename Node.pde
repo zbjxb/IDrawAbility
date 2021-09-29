@@ -2,7 +2,7 @@ public interface INodeContent
 {
 }
 
-public interface INodePainter
+public interface INodePainter extends IMouseEventHandler
 {
   public void setContent(INodeContent content);
   public INodeContent getContent();
@@ -70,12 +70,19 @@ public class NodeList extends ArrayList<INode>
 {
 }
 
-public class BasePainter implements INodePainter
+public class BasePainter implements INodePainter,  IMouseEventHandler
 {
+  private INodeContent _content;
+  private PVector _origin;
+  private PVector _size;
+  
+  private IMouseEventHandler _handler;
+  
   public BasePainter(float x, float y, float w, float h)
   {
     _origin = new PVector(x, y);
     _size = new PVector(w, h);
+    _handler = new MouseEventHandlerCore(this);
   }
   
   public void setContent(INodeContent content)
@@ -111,7 +118,30 @@ public class BasePainter implements INodePainter
     _size.y = h;
   }
   
-  private INodeContent _content;
-  private PVector _origin;
-  private PVector _size;
+  /////////  IMouseEventHandler ///////////
+  public void selectCallback()
+  {
+    if (_handler != null)
+    {
+      _handler.selectCallback();
+    }
+  }
+  
+  public void onMouseEnter()
+  {
+  }
+  
+  public void onMouseHover()
+  {
+  }
+  
+  public void onMouseDragged()
+  {
+    setOrigin(_origin.x+(mouseX-pmouseX), _origin.y+(mouseY-pmouseY));
+    print("setOrigin called\n");
+  }
+  
+  public void onMouseLeave()
+  {
+  }
 }

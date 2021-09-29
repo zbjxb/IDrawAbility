@@ -1,14 +1,17 @@
-NodeList globalNodes;
+///////////////////// Init section /////////////////////
+NodeList globalNodes = new NodeList();
+IMouseEventProcessor globalMouseProcessor = new MouseEventProcessor();
+
+
+///////////////////// main logic ///////////////////////
 
 void setup()
 {
-  size(1600, 1200);
+  size(1366, 768);
   surface.setResizable(true);
   randomSeed(0);
   
   //createGUI();
-  
-  globalNodes = new NodeList();
   
   String[] properties = {"length: int", "size: int"};
   String[] functions = {"void reset()"};
@@ -22,8 +25,16 @@ void setup()
   globalNodes.add(n1);
 }
 
+void update()
+{
+  globalMouseProcessor.process();
+}
+
 void draw() 
 {
+  background(255,255,255);
+  update();
+  
   for(INode n : globalNodes)
   {
     n.draw();
